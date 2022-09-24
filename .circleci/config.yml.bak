@@ -17,6 +17,7 @@ jobs:
     steps:
       - run: echo world
       
+#Environment variables      
   build:
     docker:
         - image: cimg/base:2020.01
@@ -25,6 +26,26 @@ jobs:
         - run:
             name: "echo an env var that is part of our project"
             command: echo $MY_ENV_VAR
+            
+#Sharing files            
+  save_hello_world_output:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - run: echo "hello world" > ~/output.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - output.txt
+  print_output_file:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - attach_workspace:
+        at: ~/
+      - run: cat ~/output.txt    
+  
+  
 
 # Invoke jobs via workflows
 workflows:
@@ -34,4 +55,8 @@ workflows:
       - print_world:
             requires:
                 - print_hello
-      - build          
+      - build  
+      - save_hello_world_output
+      - print_output_file:
+            requires:
+                - save_hello_world_output
